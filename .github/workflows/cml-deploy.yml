@@ -54,12 +54,12 @@ jobs:
     # ✅ CML Report
     - name: Generate and post CML report
       env:
-        REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        REPO_TOKEN: ${{ secrets.GH_PAT }}   # ✅ Use PAT instead of default GitHub token
       run: |
         echo "## 🚀 Deployment Report" > report.md
         echo "\n### ✅ Deployed FastAPI Iris App" >> report.md
         echo "\n#### 🐳 Docker Image: iris-api:latest" >> report.md
         echo "\n#### 📦 Kubernetes Pods:" >> report.md
         kubectl get pods >> report.md
-        cml comment create report.md
+        npx cml comment create report.md     # ✅ Use `npx` to ensure it runs globally
 
