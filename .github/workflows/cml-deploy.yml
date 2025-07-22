@@ -1,4 +1,4 @@
-name: CML CD for Iris API
+name: CML CD for FastAPI App
 
 on:
   push:
@@ -6,64 +6,62 @@ on:
   pull_request:
     branches: [main]
 
-# Updated permissions to allow writing commit comments and PR comments
 permissions:
-  contents: write
+  contents: read
   pull-requests: write
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+      pull-requests: write
+
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-    # ✅ Authenticate to Google Cloud using service account key
-    - name: Authenticate to GCP
-      uses: google-github-actions/auth@v1
-      with:
-        credentials_json: '${{ secrets.GCP_SA_KEY }}'
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: '${{ secrets.GCP_SA_KEY }}'
 
-    # ✅ Automatically fetch GKE credentials using service account
-    - name: Get GKE credentials
-      uses: google-github-actions/get-gke-credentials@v1
-      with:
-        cluster_name: autopilot-fastapi-cluster-1
-        location: us-central1
-        project_id: sunlit-vortex-459609-m8
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v1
+        with:
+          cluster_name: autopilot-fastapi-cluster-1
+          location: us-central1
+          project_id: sunlit-vortex-459609-m8
 
-    # ✅ Docker build
-    - name: Set up Docker
-      uses: docker/setup-buildx-action@v2
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v2
 
-    - name: Build Docker image
-      run: docker build -t iris-api:latest .
+      - name: Build Docker image
+        run: docker build -t us-central1-docker.pkg.dev/sunlit-vortex-459609-m8/my-repo/fastapi:latest .
 
-    - name: Save Docker image
-      run: docker save iris-api:latest -o iris-api.tar
+      - name: Push image to Artifact Registry
+        run: |
+          echo "${{ secrets.GCP_SA_KEY }}" | docker login -u _json_key --password-stdin https://us-central1-docker.pkg.dev
+          docker push us-central1-docker.pkg.dev/sunlit-vortex-459609-m8/my-repo/fastapi:latest
 
-    - name: Load image into local cluster (kind) [Optional]
-      run: kind load image-archive iris-api.tar || echo "Skipping kind load"
+      - name: Deploy to Kubernetes
+        run: |
+          kubectl apply -f k8s/deployment.yaml --validate=false
+          kubectl apply -f k8s/service.yaml --validate=false
 
-    # ✅ Deploy to Kubernetes
-    - name: Deploy to Kubernetes
-      run: |
-        kubectl apply -f k8s/deployment.yaml --validate=false
-        kubectl apply -f k8s/service.yaml --validate=false
+      - name: Install CML
+        run: npm install -g @dvcorg/cml
 
-    # ✅ Install CML
-    - name: Install CML
-      run: npm install -g @dvcorg/cml
-
-    # ✅ CML Report
-    - name: Generate and post CML report
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # GitHub automatically injects this
-      run: |
-        echo "## 🚀 Deployment Report" > report.md
-        echo "\n### ✅ Deployed FastAPI Iris App" >> report.md
-        echo "\n#### 🐳 Docker Image: iris-api:latest" >> report.md
-        echo "\n#### 📦 Kubernetes Pods:" >> report.md
-        kubectl get pods >> report.md
-        npx @dvcorg/cml comment create report.md
+      - name: Generate and post CML report
+        if: github.event_name == 'pull_request'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "## 🚀 FastAPI App Deployment Report" > report.md
+          echo "\n### ✅ Deployed FastAPI App to GKE" >> report.md
+          echo "\n#### 📦 Pods:" >> report.md
+          kubectl get pods >> report.md
+          echo "\n#### 🛰️ Services:" >> report.md
+          kubectl get service fastapi-service >> report.md
+          npx @dvcorg/cml comment create report.md
 
