@@ -36,13 +36,17 @@ jobs:
       - name: Set up Docker
         uses: docker/setup-buildx-action@v2
 
+      - name: Configure Docker to use Artifact Registry
+        run: |
+          echo '${{ secrets.GCP_SA_KEY }}' > /tmp/key.json
+          gcloud auth activate-service-account --key-file=/tmp/key.json
+          gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+
       - name: Build Docker image
         run: docker build -t us-central1-docker.pkg.dev/sunlit-vortex-459609-m8/my-repo/fastapi:latest .
 
       - name: Push image to Artifact Registry
-        run: |
-          echo "${{ secrets.GCP_SA_KEY }}" | docker login -u _json_key --password-stdin https://us-central1-docker.pkg.dev
-          docker push us-central1-docker.pkg.dev/sunlit-vortex-459609-m8/my-repo/fastapi:latest
+        run: docker push us-central1-docker.pkg.dev/sunlit-vortex-459609-m8/my-repo/fastapi:latest
 
       - name: Deploy to Kubernetes
         run: |
