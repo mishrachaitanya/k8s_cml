@@ -58,7 +58,7 @@ jobs:
 
     # ✅ Post the report using CML v2 Action
     - name: Post CML Report
-      uses: iterative/cml@v2
+      uses: iterative/cml@v1
       env:
         REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
