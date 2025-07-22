@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+  pull-requests: write   # Needed for CML to post comments
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -37,7 +41,6 @@ jobs:
     - name: Save Docker image
       run: docker save iris-api:latest -o iris-api.tar
 
-    # OPTIONAL: Load into kind if testing locally
     - name: Load image into local cluster (kind) [Optional]
       run: kind load image-archive iris-api.tar || echo "Skipping kind load"
 
@@ -54,12 +57,12 @@ jobs:
     # ✅ CML Report
     - name: Generate and post CML report
       env:
-        REPO_TOKEN: ${{ secrets.GH_PAT }}   # ✅ Use PAT instead of default GitHub token
+        REPO_TOKEN: ${{ secrets.GH_PAT }}   # Use a Personal Access Token with repo access
       run: |
         echo "## 🚀 Deployment Report" > report.md
         echo "\n### ✅ Deployed FastAPI Iris App" >> report.md
         echo "\n#### 🐳 Docker Image: iris-api:latest" >> report.md
         echo "\n#### 📦 Kubernetes Pods:" >> report.md
         kubectl get pods >> report.md
-        npx cml comment create report.md     # ✅ Use `npx` to ensure it runs globally
+        npx cml comment create report.md
 
