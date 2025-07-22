@@ -1,0 +1,14 @@
+artifact_uri: mlflow-artifacts:/648157398217862151/5f28725d440749a081e3490db6e08219/artifacts
+end_time: 1751617601186
+entry_point_name: ''
+experiment_id: '648157398217862151'
+lifecycle_stage: active
+run_id: 5f28725d440749a081e3490db6e08219
+run_name: brawny-bat-166
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1751617598184
+status: 3
+tags: []
+user_id: jupyter

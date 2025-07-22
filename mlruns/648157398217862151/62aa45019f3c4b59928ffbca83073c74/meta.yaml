@@ -1,0 +1,14 @@
+artifact_uri: mlflow-artifacts:/648157398217862151/62aa45019f3c4b59928ffbca83073c74/artifacts
+end_time: 1751617535197
+entry_point_name: ''
+experiment_id: '648157398217862151'
+lifecycle_stage: active
+run_id: 62aa45019f3c4b59928ffbca83073c74
+run_name: youthful-owl-324
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1751617529189
+status: 3
+tags: []
+user_id: jupyter

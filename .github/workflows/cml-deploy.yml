@@ -1,0 +1,48 @@
+name: CML CD for Iris API
+
+on:
+  push:
+    branches: ["main","master"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Docker
+      uses: docker/setup-buildx-action@v2
+
+    - name: Build Docker image
+      run: docker build -t iris-api:latest .
+
+    - name: Save Docker image
+      run: docker save iris-api:latest -o iris-api.tar
+
+    - name: Set up Kubeconfig
+      run: |
+        mkdir -p ~/.kube
+        echo "${{ secrets.KUBECONFIG_CONTENT }}" > ~/.kube/config
+
+    - name: Load image into cluster (optional, for kind)
+      run: |
+        kind load image-archive iris-api.tar || echo "Skipping kind load"
+
+    - name: Deploy to Kubernetes
+      run: |
+        kubectl apply -f k8s/deployment.yaml
+        kubectl apply -f k8s/service.yaml
+
+    - name: Generate and post CML report
+      env:
+        REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        echo "## 🚀 Deployment Report" > report.md
+        echo "\n### ✅ Deployed FastAPI Iris App" >> report.md
+        echo "\n#### 🐳 Docker Image: iris-api:latest" >> report.md
+        echo "\n#### 📦 Kubernetes Pods:" >> report.md
+        kubectl get pods >> report.md
+        cml comment create report.md

@@ -1,0 +1,14 @@
+artifact_uri: mlflow-artifacts:/602704250754504100/52e64db16d964258bcf2ef89c0dc50fe/artifacts
+end_time: 1751622378228
+entry_point_name: ''
+experiment_id: '602704250754504100'
+lifecycle_stage: active
+run_id: 52e64db16d964258bcf2ef89c0dc50fe
+run_name: mercurial-smelt-549
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1751622371265
+status: 3
+tags: []
+user_id: jupyter

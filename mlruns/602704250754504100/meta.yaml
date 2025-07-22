@@ -1,0 +1,6 @@
+artifact_location: mlflow-artifacts:/602704250754504100
+creation_time: 1751622338623
+experiment_id: '602704250754504100'
+last_update_time: 1751622338623
+lifecycle_stage: active
+name: 'IRIS classifier: MLflow Assignment 5'
