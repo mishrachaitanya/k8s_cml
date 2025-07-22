@@ -14,55 +14,59 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+      pull-requests: write
+
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-    # ✅ Authenticate to Google Cloud using service account key
-    - name: Authenticate to GCP
-      uses: google-github-actions/auth@v1
-      with:
-        credentials_json: '${{ secrets.GCP_SA_KEY }}'
+      # ✅ Authenticate to Google Cloud using service account key
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: '${{ secrets.GCP_SA_KEY }}'
 
-    # ✅ Automatically fetch GKE credentials using service account
-    - name: Get GKE credentials
-      uses: google-github-actions/get-gke-credentials@v1
-      with:
-        cluster_name: autopilot-fastapi-cluster-1
-        location: us-central1
-        project_id: sunlit-vortex-459609-m8
+      # ✅ Automatically fetch GKE credentials using service account
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v1
+        with:
+          cluster_name: autopilot-fastapi-cluster-1
+          location: us-central1
+          project_id: sunlit-vortex-459609-m8
 
-    # ✅ Docker build
-    - name: Set up Docker
-      uses: docker/setup-buildx-action@v2
+      # ✅ Docker build
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v2
 
-    - name: Build Docker image
-      run: docker build -t iris-api:latest .
+      - name: Build Docker image
+        run: docker build -t iris-api:latest .
 
-    - name: Save Docker image
-      run: docker save iris-api:latest -o iris-api.tar
+      - name: Save Docker image
+        run: docker save iris-api:latest -o iris-api.tar
 
-    - name: Load image into local cluster (kind) [Optional]
-      run: kind load image-archive iris-api.tar || echo "Skipping kind load"
+      - name: Load image into local cluster (kind) [Optional]
+        run: kind load image-archive iris-api.tar || echo "Skipping kind load"
 
-    # ✅ Deploy to Kubernetes
-    - name: Deploy to Kubernetes
-      run: |
-        kubectl apply -f k8s/deployment.yaml --validate=false
-        kubectl apply -f k8s/service.yaml --validate=false
+      # ✅ Deploy to Kubernetes
+      - name: Deploy to Kubernetes
+        run: |
+          kubectl apply -f k8s/deployment.yaml --validate=false
+          kubectl apply -f k8s/service.yaml --validate=false
 
-    # ✅ Install CML
-    - name: Install CML
-      run: npm install -g @dvcorg/cml
+      # ✅ Install CML
+      - name: Install CML
+        run: npm install -g @dvcorg/cml
 
-    # ✅ CML Report
-    - name: Generate and post CML report
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # GitHub automatically injects this
-      run: |
-        echo "## 🚀 Deployment Report" > report.md
-        echo "\n### ✅ Deployed FastAPI Iris App" >> report.md
-        echo "\n#### 🐳 Docker Image: iris-api:latest" >> report.md
-        echo "\n#### 📦 Kubernetes Pods:" >> report.md
-        kubectl get pods >> report.md
-        npx @dvcorg/cml comment create report.md
+      # ✅ CML Report
+      - name: Generate and post CML report
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "## 🚀 Deployment Report" > report.md
+          echo "\n### ✅ Deployed FastAPI Iris App" >> report.md
+          echo "\n#### 🐳 Docker Image: iris-api:latest" >> report.md
+          echo "\n#### 📦 Kubernetes Pods:" >> report.md
+          kubectl get pods >> report.md
+          npx @dvcorg/cml comment create report.md
 
