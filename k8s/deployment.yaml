@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: fastapi-app
-          image: us-central1-docker.pkg.dev/sunlit-vortex-459609-m8/my-repo/fastapi:latest
+          image: us-central1-docker.pkg.dev/sunlit-vortex-459609-m8/my-repo/fastapi:stable
           imagePullPolicy: Always
           ports:
             - containerPort: 8200
