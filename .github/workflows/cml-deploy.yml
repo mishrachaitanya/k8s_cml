@@ -2,7 +2,7 @@ name: CML CD for Iris API
 
 on:
   push:
-    branches: ["master","main"]
+    branches: ["master", "main"]
   pull_request:
     branches: [main]
 
@@ -47,15 +47,20 @@ jobs:
         kubectl apply -f k8s/deployment.yaml
         kubectl apply -f k8s/service.yaml
 
-    # ✅ CML Report
-    - name: Generate and post CML report
-      env:
-        REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    # ✅ Generate report file
+    - name: Generate CML Report
       run: |
         echo "## 🚀 Deployment Report" > report.md
         echo "\n### ✅ Deployed FastAPI Iris App" >> report.md
         echo "\n#### 🐳 Docker Image: iris-api:latest" >> report.md
         echo "\n#### 📦 Kubernetes Pods:" >> report.md
         kubectl get pods >> report.md
-        cml comment create report.md
+
+    # ✅ Post the report using CML v2 Action
+    - name: Post CML Report
+      uses: iterative/cml@v2
+      env:
+        REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        markdown: report.md
 
