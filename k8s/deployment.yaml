@@ -1,20 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: iris-api
+  name: fastapi-app
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: iris-api
+      app: fastapi-app
   template:
     metadata:
       labels:
-        app: iris-api
+        app: fastapi-app
     spec:
       containers:
-        - name: iris-api
-          image: iris-api:latest
-          imagePullPolicy: IfNotPresent
+        - name: fastapi-app
+          image: us-central1-docker.pkg.dev/sunlit-vortex-459609-m8/my-repo/fastapi:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8200
+
