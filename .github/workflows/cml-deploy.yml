@@ -47,20 +47,19 @@ jobs:
         kubectl apply -f k8s/deployment.yaml
         kubectl apply -f k8s/service.yaml
 
-    # ✅ Generate report file
-    - name: Generate CML Report
+    # ✅ Install CML
+    - name: Install CML
+      run: npm install -g @dvcorg/cml
+
+    # ✅ CML Report
+    - name: Generate and post CML report
+      env:
+        REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         echo "## 🚀 Deployment Report" > report.md
         echo "\n### ✅ Deployed FastAPI Iris App" >> report.md
         echo "\n#### 🐳 Docker Image: iris-api:latest" >> report.md
         echo "\n#### 📦 Kubernetes Pods:" >> report.md
         kubectl get pods >> report.md
-
-    # ✅ Post the report using CML v2 Action
-    - name: Post CML Report
-      uses: iterative/cml@v1
-      env:
-        REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        markdown: report.md
+        cml comment create report.md
 
