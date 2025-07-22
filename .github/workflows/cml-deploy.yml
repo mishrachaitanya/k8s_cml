@@ -51,7 +51,7 @@ jobs:
         run: npm install -g @dvcorg/cml
 
       - name: Generate and post CML report
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'push_request'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
