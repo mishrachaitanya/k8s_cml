@@ -1,3 +1,11 @@
+name: CML CD for Iris API
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -5,19 +13,51 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Set up gcloud
+    # ✅ Authenticate to GCP using service account
+    - name: Set up gcloud credentials
       uses: google-github-actions/auth@v1
       with:
         credentials_json: '${{ secrets.GCP_SA_KEY }}'
 
-    - name: Set up gcloud CLI and auth to GKE
+    - name: Set up gcloud CLI
       uses: google-github-actions/setup-gcloud@v1
       with:
         project_id: sunlit-vortex-459609-m8
 
-    - name: Configure GKE cluster
+    - name: Configure GKE Cluster access
       run: |
         gcloud container clusters get-credentials autopilot-fastapi-cluster-1 \
           --region us-central1 \
           --project sunlit-vortex-459609-m8
+
+    # ✅ Docker build and deployment steps
+    - name: Set up Docker
+      uses: docker/setup-buildx-action@v2
+
+    - name: Build Docker image
+      run: docker build -t iris-api:latest .
+
+    - name: Save Docker image
+      run: docker save iris-api:latest -o iris-api.tar
+
+    - name: Load image into cluster (optional, for kind)
+      run: |
+        kind load image-archive iris-api.tar || echo "Skipping kind load"
+
+    - name: Deploy to Kubernetes
+      run: |
+        kubectl apply -f k8s/deployment.yaml
+        kubectl apply -f k8s/service.yaml
+
+    # ✅ CML Report
+    - name: Generate and post CML report
+      env:
+        REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        echo "## 🚀 Deployment Report" > report.md
+        echo "\n### ✅ Deployed FastAPI Iris App" >> report.md
+        echo "\n#### 🐳 Docker Image: iris-api:latest" >> report.md
+        echo "\n#### 📦 Kubernetes Pods:" >> report.md
+        kubectl get pods >> report.md
+        cml comment create report.md
 
